@@ -46,3 +46,4 @@ coverage.xml
 Thumbs.db
 checkpoints/
 gen/
+api_keys.yaml
