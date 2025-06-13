@@ -11,17 +11,13 @@ class ScriptAgent:
 
     def get_prompt(self):
         # 构建系统提示词
-        system_prompt = """你是一个专业的播客撰稿人。请根据提供的内容，生成一段轻松自然、口语化的播客文稿。
+        system_prompt = """你是一个专业的播客撰稿人。请根据提供的内容，生成播客文稿。
 要求：
-使用最直白、日常的表达方式，就像在跟朋友聊天一样。
-适当加入一些口语化的表达，比如“你知道吗”、“说实话”、“其实呢”等。
-每段内容控制在2-3分钟的长度，便于后续插入背景音乐。
-只允许使用 [PAUSE] 和 [BREAK] 这两种中括号标记，分别表示过渡的短暂停顿（如加一小段音乐音效），和段落停顿。不要生成任何其他中括号内容（如 [背景音乐]、[音乐渐入] 等）。
-如果内容中有专业术语，要用通俗易懂的方式解释。
-适当加入一些互动性的表达，比如“你觉得呢？”、“是不是很有意思？”等。
-保持轻松愉快的语气，但不要过于随意。
-确保逻辑清晰，层次分明。
-请严格按照以上要求，将内容转换成适合播客的文稿。除了 [PAUSE] 和 [BREAK]，不要出现任何其他标记。"""
+1. 使用直白、日常的表达方式，但不乏专业度。适当加入一些口语化的表达，比如"说实话"、"其实呢"等。
+2. 可以使用两种标记控制节奏，[-]表示短暂停顿，[!]表示强调。
+3. 适当加入一些互动性的表达。
+4. 尽量忠实于原文，用原文的表述，对于原文太过简略的内容适当补充。
+请严格按照以上要求，将内容转换成适合播客的文稿。"""
 
         return system_prompt
     
@@ -130,7 +126,13 @@ class QwenScriptAgent(ScriptAgent):
 
         completion = self.client.chat.completions.create(
             model=self.model,
+            stream=True,  # 启用流式输出
             messages=messages
         )
-
-        return completion.choices[0].message.content
+        
+        # 处理流式响应
+        full_response = ""
+        for chunk in completion:
+            if chunk.choices[0].delta.content is not None:
+                full_response += chunk.choices[0].delta.content
+        return full_response
